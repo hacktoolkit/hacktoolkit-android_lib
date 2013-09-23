@@ -18,9 +18,16 @@ import com.parse.ParseObject;
 import com.parse.ParseUser;
 
 public class ParseHelper {
+	public static boolean initialized = false;
+	
 	public static void init(Activity activity, String appId, String clientId) {
 	    Parse.initialize(activity, appId, clientId);
 	    ParseAnalytics.trackAppOpened(activity.getIntent());
+	    ParseHelper.initialized = true; 
+	}
+	
+	public static void fbInit(String fbAppId) {
+	    ParseFacebookUtils.initialize(fbAppId);
 	}
 	
 	public static void test() {
@@ -29,8 +36,8 @@ public class ParseHelper {
 	    testObject.saveInBackground();
 	}
 	
-	public static void facebookLogin(String fbAppId, Activity activity, final HTKLoginCallback callback) {
-	    ParseFacebookUtils.initialize(fbAppId);
+	public static void facebookLogin(String fbAppId, Activity activity, final HTKCallback callback) {
+		ParseHelper.fbInit(fbAppId);
 	    ParseFacebookUtils.logIn(Arrays.asList("email", Permissions.Friends.ABOUT_ME),
 	    		activity, new LogInCallback() {
 	    	  @Override
@@ -44,7 +51,7 @@ public class ParseHelper {
 	    	    		} else {
 	    	    			Log.d("Hacktoolkit", "User logged in through Facebook!");
 	    	    		}
-	    	    		callback.done();
+	    	    		callback.execute(null);
 	    	    }
 	    	  }
 	    	});

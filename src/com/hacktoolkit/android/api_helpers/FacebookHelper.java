@@ -13,7 +13,7 @@ import com.parse.ParseUser;
 
 public class FacebookHelper {
 
-	public static void getFriends() {
+	public static void getFriends(final HTKCallback callback) {
 		Request.newMyFriendsRequest(ParseFacebookUtils.getSession(), new Request.GraphUserListCallback() {
 
 			@Override
@@ -33,6 +33,7 @@ public class FacebookHelper {
 					// the current user
 					try {
 						List<ParseUser> friendUsers = friendQuery.find();
+						callback.execute(friendUsers);
 					} catch (ParseException e) {
 						// poop!
 					}
