@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 
+import com.hacktoolkit.android.utils.HTKUtils;
 import com.hacktoolkit.android.utils.SystemUiHider;
 
 /**
@@ -24,6 +25,7 @@ public abstract class HTKSplashScreenActivity extends Activity {
 
 	public void runSplashThread() {
 		final int splashDuration = getSplashDurationMillis();
+		final Activity currentActivity = this;
 		Thread splashThread = new Thread() {
 			@Override
 			public void run() {
@@ -36,9 +38,8 @@ public abstract class HTKSplashScreenActivity extends Activity {
 				} catch (InterruptedException e) {
 					// do nothing
 				} finally {
-					finish();
 					Intent intent = getNextActivity();
-					startActivity(intent);
+					HTKUtils.switchActivity(currentActivity, intent);
 				}
 			}
 		};
