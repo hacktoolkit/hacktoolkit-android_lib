@@ -10,7 +10,7 @@ import com.parse.ParseUser;
  * HTKUser
  * 
  * Represents the user of this app, and acts as a wrapper for ParseUser
- * @author jontsai
+ * @author Hacktoolkit
  *
  */
 public class HTKUser {
@@ -33,7 +33,10 @@ public class HTKUser {
 	}
 	
 	public boolean isAuthenticated() {
-		boolean auth = parseUser.isAuthenticated();
+		boolean auth = false;
+		if (parseUser != null) {
+			auth = parseUser.isAuthenticated();
+		}
 		return auth;
 	}
 	
@@ -42,7 +45,7 @@ public class HTKUser {
 		String lastName = parseUser.getString("lastName");
 		StringBuffer sb = new StringBuffer();
 		sb.append(firstName);
-		if (!firstName.equals("")) {
+		if (firstName != null && !firstName.equals("")) {
 			sb.append(" ");
 			sb.append(lastName);
 		}
@@ -55,11 +58,12 @@ public class HTKUser {
 	 * 
 	 * @param latitude
 	 * @param longitude
+	 * @param forceUpdate whether we should force an update
 	 * @return true if location was updated, false otherwise
 	 */
-	public boolean updateLocation(double latitude, double longitude) {
+	public boolean updateLocation(double latitude, double longitude, boolean forceUpdate) {
 		boolean updated = false;
-		if (shouldUpdateLocation(latitude, longitude)) {
+		if (forceUpdate || shouldUpdateLocation(latitude, longitude)) {
 			parseUser.put("latitude", latitude);
 			parseUser.put("longitude", longitude);
 			parseUser.put("locationLastUpdatedAt", new Date());

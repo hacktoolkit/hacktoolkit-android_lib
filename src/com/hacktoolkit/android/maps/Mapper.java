@@ -20,16 +20,16 @@ public class Mapper {
 	private MarkerOptions currentLocationMarker;
 		
 	public Mapper(GoogleMap googleMap) {
+		this.googleMap = googleMap;
+		// TODO: not working for some reason?
 //		UiSettings settings = googleMap.getUiSettings();
 //		settings.setMyLocationButtonEnabled(true);
-		this.googleMap = googleMap;
-
 	}
 	
-	public boolean updateMap(double latitude, double longitude) {
+	public boolean updateMap(String label, double latitude, double longitude) {
 		boolean updated = false;
 		if (googleMap != null) {
-			updateCurrentLocationMarker(latitude, longitude);
+			updateCurrentLocationMarker(label, latitude, longitude);
 
 			LatLngBounds.Builder builder = new LatLngBounds.Builder();
 //			for each (Marker m : markers) {
@@ -48,11 +48,11 @@ public class Mapper {
 		return updated;
 	}
 	
-	private void updateCurrentLocationMarker(double latitude, double longitude) {
+	private void updateCurrentLocationMarker(String label, double latitude, double longitude) {
 		if (currentLocationMarker == null) {
 			currentLocationMarker = new MarkerOptions()
 			.position(new LatLng(latitude, longitude))
-			.title("Current Location");
+			.title(label);
 			googleMap.addMarker(currentLocationMarker);
 		} else {
 			LatLng coord = new LatLng(latitude, longitude);

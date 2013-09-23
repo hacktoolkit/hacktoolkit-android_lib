@@ -12,26 +12,7 @@ import com.parse.ParseQuery;
 import com.parse.ParseUser;
 
 public class FacebookHelper {
-	public static void updateParseUserWithGraphUser() {
-		Request.newMeRequest(ParseFacebookUtils.getSession(), new Request.GraphUserCallback() {
-			@Override
-			public void onCompleted(GraphUser user, Response response) {
-				if (user != null) {
-					String fbId = user.getId();
-					String firstName = user.getFirstName();
-					String lastName = user.getLastName();
-					String email = (String) user.getProperty("email");
-					ParseUser parseUser = ParseUser.getCurrentUser();
-					parseUser.put("fbId", fbId);
-					parseUser.put("firstName", firstName);
-					parseUser.put("lastName", lastName);
-					parseUser.put("email", email);
-					parseUser.saveEventually();
-				}
-			}
-		}).executeAsync();
-	}
-	
+
 	public static void getFriends() {
 		Request.newMyFriendsRequest(ParseFacebookUtils.getSession(), new Request.GraphUserListCallback() {
 
