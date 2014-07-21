@@ -2,8 +2,13 @@ package com.hacktoolkit.android.user;
 
 import java.util.Date;
 
+import com.facebook.Request;
+import com.facebook.Response;
+import com.facebook.model.GraphUser;
 import com.hacktoolkit.android.constants.TimeConstants;
 import com.hacktoolkit.android.maps.MapUtils;
+import com.parse.ParseFacebookUtils;
+import com.parse.ParseGeoPoint;
 import com.parse.ParseUser;
 
 /**
@@ -16,6 +21,10 @@ import com.parse.ParseUser;
 public class HTKUser {
 	public static HTKUser getCurrentUser() {
 		ParseUser parseUser = ParseUser.getCurrentUser();
+		HTKUser user = getCurrentUser(parseUser);
+		return user;
+	}
+	public static HTKUser getCurrentUser(ParseUser parseUser) {
 		HTKUser user = new HTKUser(parseUser);
 		return user;
 	}
@@ -53,6 +62,25 @@ public class HTKUser {
 		return name;
 	}
 	
+	public void updateWithGraphUser() {
+		Request.newMeRequest(ParseFacebookUtils.getSession(), new Request.GraphUserCallback() {
+			@Override
+			public void onCompleted(GraphUser user, Response response) {
+				if (user != null) {
+					String fbId = user.getId();
+					String firstName = user.getFirstName();
+					String lastName = user.getLastName();
+					String email = (String) user.getProperty("email");
+					parseUser.put("fbId", fbId);
+					parseUser.put("firstName", firstName);
+					parseUser.put("lastName", lastName);
+					parseUser.put("email", email);
+					parseUser.saveEventually();
+				}
+			}
+		}).executeAsync();
+	}
+	
 	/**
 	 * updateLocation
 	 * 
@@ -64,8 +92,8 @@ public class HTKUser {
 	public boolean updateLocation(double latitude, double longitude, boolean forceUpdate) {
 		boolean updated = false;
 		if (forceUpdate || shouldUpdateLocation(latitude, longitude)) {
-			parseUser.put("latitude", latitude);
-			parseUser.put("longitude", longitude);
+			ParseGeoPoint geoPoint = new ParseGeoPoint(latitude, longitude);
+			parseUser.put("location", geoPoint);
 			parseUser.put("locationLastUpdatedAt", new Date());
 			parseUser.saveEventually();
 			updated = true;
