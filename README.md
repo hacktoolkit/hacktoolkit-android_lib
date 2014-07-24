@@ -16,6 +16,7 @@ Built-in support for popular APIs:
 
 ## Sample Projects built using Hacktoolkit for Android
 
+* [Hello World](https://github.com/hacktoolkit/htk-android-HelloWorld)
 * [Simple Todo List App](https://github.com/hacktoolkit/htk-android-SimpleTodo)
 
 ## Useful Components
