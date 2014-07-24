@@ -1,5 +1,7 @@
 <resources>
 
     <string name="app_name">HacktoolkitAndroid</string>
+    <string name="splash_text_title">Sample Splash Title</string>
+    <string name="splash_text_subtitle">Sample Splash Subtitle</string>
 
 </resources>
