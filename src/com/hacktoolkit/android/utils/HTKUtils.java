@@ -7,6 +7,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.provider.MediaStore;
+import android.telephony.SmsManager;
 import android.text.Html;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
@@ -33,6 +34,11 @@ public class HTKUtils {
 	public static void switchActivity(Activity currentActivity, Intent intent) {
 		currentActivity.finish();
 		currentActivity.startActivity(intent);
+	}
+
+	public static void sendSMS(String phoneNumber, String message) {
+		SmsManager sms = SmsManager.getDefault();
+		sms.sendTextMessage(phoneNumber, null, message, null, null);
 	}
 
 	/**

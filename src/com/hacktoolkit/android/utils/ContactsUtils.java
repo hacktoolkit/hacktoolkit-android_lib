@@ -1,56 +1,132 @@
 package com.hacktoolkit.android.utils;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
-
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import com.hacktoolkit.android.models.HTKContact;
+import java.util.HashMap;
 
 import android.app.Activity;
 import android.content.ContentResolver;
+import android.content.ContentUris;
+import android.content.res.AssetFileDescriptor;
 import android.database.Cursor;
+import android.net.Uri;
 import android.provider.ContactsContract;
+import android.provider.ContactsContract.Contacts;
+
+import com.hacktoolkit.android.models.HTKContact;
 
 public class ContactsUtils {
-	public static ArrayList<JSONObject> getContactsWithPhone(Activity currentActivity) {
-		ContentResolver cr = currentActivity.getContentResolver();
-		Cursor cur = cr.query(ContactsContract.Contacts.CONTENT_URI,  null,  null, null, null);
+	public static ArrayList<HTKContact> getContactsWithPhone(Activity currentActivity) {
+		ContentResolver contentResolver = currentActivity.getContentResolver();
+		Cursor cursor = contentResolver.query(ContactsContract.Contacts.CONTENT_URI, null, null, null, null);
 		
-		ArrayList<JSONObject> contacts = new ArrayList<JSONObject>();
+		ArrayList<HTKContact> contacts = new ArrayList<HTKContact>();
 		
-		if (cur.getCount() > 0) {
-            while (cur.moveToNext()) {
-            		HTKContact contact2 = new HTKContact();
-            		JSONObject contact = new JSONObject();
-                String id = cur.getString(cur.getColumnIndex(ContactsContract.Contacts._ID));
-                String name = cur.getString(cur.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME));
+		if (cursor.getCount() > 0) {
+            while (cursor.moveToNext()) {
+            		HTKContact contact = new HTKContact();
+                String id = cursor.getString(cursor.getColumnIndex(ContactsContract.Contacts._ID));
+                String name = cursor.getString(cursor.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME));
                 String phone = "";
-                if (Integer.parseInt(cur.getString(cur.getColumnIndex(ContactsContract.Contacts.HAS_PHONE_NUMBER))) > 0) {
+                String phoneType = "";
+                if (Integer.parseInt(cursor.getString(cursor.getColumnIndex(ContactsContract.Contacts.HAS_PHONE_NUMBER))) > 0) {
                     System.out.println("name : " + name + ", ID : " + id);
 
                     // get the phone number
-                    Cursor pCur = cr.query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI,null,
-                                           ContactsContract.CommonDataKinds.Phone.CONTACT_ID +" = ?",
-                                           new String[]{id}, null);
-                    while (pCur.moveToNext()) {
-                          phone = pCur.getString(
-                                 pCur.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));
-                          System.out.println("phone" + phone);
-                          break;
+                    Cursor phoneCursor = contentResolver.query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI, null,
+                                           ContactsContract.CommonDataKinds.Phone.CONTACT_ID + " = ?",
+                                           new String[]{ id }, null);
+                    while (phoneCursor.moveToNext()) {
+                    	    // grab the first phone number
+                    		phone = phoneCursor.getString(
+                    				phoneCursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));
+                    		int type = Integer.parseInt(phoneCursor.getString(
+                    				phoneCursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.TYPE)));
+                    		if (type == ContactsContract.CommonDataKinds.Phone.TYPE_CUSTOM) {
+                    			phoneType = phoneCursor.getString(phoneCursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.LABEL));
+                    		} else {
+                    			switch(type) {
+                    			case ContactsContract.CommonDataKinds.Phone.TYPE_HOME:
+                    				phoneType = "Home";
+                    				break;
+                    			case ContactsContract.CommonDataKinds.Phone.TYPE_MOBILE:
+                    				phoneType = "Mobile";
+                    				break;
+                    			case ContactsContract.CommonDataKinds.Phone.TYPE_WORK:
+                    				phoneType = "Work";
+                    				break;
+                    			case ContactsContract.CommonDataKinds.Phone.TYPE_FAX_WORK:
+                    				phoneType = "Work Fax";
+                    				break;
+                    			case ContactsContract.CommonDataKinds.Phone.TYPE_FAX_HOME:
+                    				phoneType = "Home Fax";
+                    				break;
+                    			case ContactsContract.CommonDataKinds.Phone.TYPE_PAGER:
+                    				phoneType = "Pager";
+                    				break;
+                    			case ContactsContract.CommonDataKinds.Phone.TYPE_OTHER:
+                    				phoneType = "Other";
+                    				break;
+                    			case ContactsContract.CommonDataKinds.Phone.TYPE_CALLBACK:
+                    				phoneType = "Callback";
+                    				break;
+                    				// other types:
+                    				//http://developer.android.com/reference/android/provider/ContactsContract.CommonDataKinds.Phone.html
+                    			default:	
+                    				break;
+                    			}
+                    		}
+//                    		System.out.println("phone" + phone);
+                    		break;
                     }
-                    pCur.close();
-                    try {
-                        contact.put("name", name);
-                        contact.put("phone", phone);
-                        contacts.add(contact);
-                    } catch (JSONException jsone) {
-                    	   // oh well
+                    phoneCursor.close();
+                    contact.setData("id",  Integer.valueOf(id));
+                    contact.setData("name", name);
+                    contact.setData("phone", phone);
+                    contact.setData("phoneType", phoneType);
+                    contacts.add(contact);
+                    if (contacts.size() > 20) {
+                    		break;
                     }
-                
                 }
             }
 		}
         return contacts;
 	}
+	
+	public static InputStream openPhoto(Activity currentActivity, long contactId) {
+		Uri contactUri = ContentUris.withAppendedId(Contacts.CONTENT_URI, contactId);
+		Uri photoUri = Uri.withAppendedPath(contactUri, Contacts.Photo.CONTENT_DIRECTORY);
+		Cursor cursor = currentActivity.getContentResolver().query(photoUri,
+				new String[] { Contacts.Photo.PHOTO}, null, null, null);
+		if (cursor == null) {
+			return null;
+		}
+		try {
+			if (cursor.moveToFirst()) {
+				byte[] data = cursor.getBlob(0);
+				if (data != null) {
+					return new ByteArrayInputStream(data);
+				}
+			}
+		} finally {
+			cursor.close();
+		}
+		return null;
+	}
+
+	public static InputStream openDisplayPhoto(Activity currentActivity, long contactId) {
+		Uri contactUri = ContentUris.withAppendedId(Contacts.CONTENT_URI, contactId);
+		Uri displayPhotoUri = Uri.withAppendedPath(contactUri, Contacts.Photo.DISPLAY_PHOTO);
+		try {
+			AssetFileDescriptor fd =
+					currentActivity.getContentResolver().openAssetFileDescriptor(displayPhotoUri, "r");
+			return fd.createInputStream();
+		} catch (IOException e) {
+			return null;
+		}
+	}
+	 
 }
