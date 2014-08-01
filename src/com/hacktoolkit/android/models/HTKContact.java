@@ -1,15 +1,69 @@
 package com.hacktoolkit.android.models;
 
 import java.util.HashMap;
+import java.util.Iterator;
 
-public class HTKContact {
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import android.os.Parcel;
+import android.os.Parcelable;
+
+public class HTKContact implements Parcelable {
 	HashMap<String, Object> data;
-	HashMap<String, Object> metaData;
+
+	public static final Parcelable.Creator<HTKContact> CREATOR = new Parcelable.Creator<HTKContact>() {
+		public HTKContact createFromParcel(Parcel in) {
+			HTKContact contact = new HTKContact(in);
+			return contact;
+		}
+
+		public HTKContact[] newArray(int size) {
+			HTKContact[] arr = new HTKContact[size];
+			return arr;
+		}
+	};
 
 	public HTKContact() {
 		this.data = new HashMap<String, Object>();
-		this.metaData = new HashMap<String, Object>();
 		this.setMetaData("selected", false);
+	}
+
+	public HTKContact(Parcel parcel) {
+		this();
+		String jsonString = parcel.readString();
+		JSONObject json = null;
+		try {
+			json = new JSONObject(jsonString);
+		} catch (JSONException jsone) {
+			// unable to convert string to JSON
+		}
+
+		if (json != null) {
+			Iterator<String> keysIter = json.keys();
+
+			while (keysIter.hasNext()) {
+				String key = keysIter.next();
+				try {
+					Object value = json.get(key);
+					this.setData(key, value);
+				} catch (JSONException jsone) {
+					// unable to read this key
+				}
+			}
+		}
+	}
+
+	public JSONObject toJSON() {
+		JSONObject json = new JSONObject();
+		for (String key : data.keySet()) {
+			try {
+				json.put(key, this.getData(key));
+			} catch (JSONException jsone) {
+				// unable to serialize this key
+			}
+		}
+		return json;
 	}
 
 	public void setData(String key, Object value) {
@@ -21,12 +75,29 @@ public class HTKContact {
 		return value;
 	}
 
+	private String getMetaKey(String key) {
+		String metaKey = String.format("meta_%s", key);
+		return metaKey;
+	}
+
 	public void setMetaData(String key, Object value) {
-		metaData.put(key, value);
+		data.put(getMetaKey(key), value);
 	}
 
 	public Object getMetaData(String key) {
-		Object value = metaData.get(key);
+		Object value = data.get(getMetaKey(key));
 		return value;
+	}
+
+	@Override
+	public int describeContents() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public void writeToParcel(Parcel dest, int flags) {
+		// TODO Auto-generated method stub
+		dest.writeString(this.toJSON().toString());
 	}
 }

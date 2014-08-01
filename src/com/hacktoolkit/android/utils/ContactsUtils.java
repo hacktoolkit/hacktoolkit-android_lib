@@ -4,7 +4,6 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.HashMap;
 
 import android.app.Activity;
 import android.content.ContentResolver;
@@ -12,12 +11,37 @@ import android.content.ContentUris;
 import android.content.res.AssetFileDescriptor;
 import android.database.Cursor;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.provider.ContactsContract;
 import android.provider.ContactsContract.Contacts;
 
+import com.hacktoolkit.android.adapters.HTKContactsAdapter;
 import com.hacktoolkit.android.models.HTKContact;
 
 public class ContactsUtils {
+	/**
+	 * Wrapper for getContactsWithPhone to offload the work from the main UI activity thread and do it asynchronously
+	 *
+	 * @param currentActivity
+	 * @param adapter the adapter to populate when contacts have been loaded
+	 */
+	public static void getContactsWithPhoneAsync(final Activity currentActivity, final HTKContactsAdapter adapter) {
+		new AsyncTask<Void, Void, ArrayList<HTKContact>>() {
+
+			@Override
+			protected ArrayList<HTKContact> doInBackground(Void... v) {
+				ArrayList<HTKContact> resultContacts = ContactsUtils.getContactsWithPhone(currentActivity);
+				return resultContacts;
+			}
+
+			@Override
+			protected void onPostExecute(ArrayList<HTKContact> resultContacts) {
+//				contacts.addAll(resultContacts);
+				adapter.loadContacts(resultContacts);
+			}
+		}.execute();
+	}
+
 	public static ArrayList<HTKContact> getContactsWithPhone(Activity currentActivity) {
 		ContentResolver contentResolver = currentActivity.getContentResolver();
 		Cursor cursor = contentResolver.query(ContactsContract.Contacts.CONTENT_URI, null, null, null, null);
@@ -87,16 +111,20 @@ public class ContactsUtils {
                     contact.setData("phone", phone);
                     contact.setData("phoneType", phoneType);
                     contacts.add(contact);
-                    if (contacts.size() > 20) {
-                    		break;
-                    }
+//                    if (contacts.size() > 20) {
+//                    		break;
+//                    }
                 }
             }
+            cursor.close();
 		}
         return contacts;
 	}
 	
 	public static InputStream openPhoto(Activity currentActivity, long contactId) {
+		if (HTKUtils.getCurrentAPIVersion() < android.os.Build.VERSION_CODES.HONEYCOMB) {
+			return null;
+		}
 		Uri contactUri = ContentUris.withAppendedId(Contacts.CONTENT_URI, contactId);
 		Uri photoUri = Uri.withAppendedPath(contactUri, Contacts.Photo.CONTENT_DIRECTORY);
 		Cursor cursor = currentActivity.getContentResolver().query(photoUri,
@@ -118,6 +146,9 @@ public class ContactsUtils {
 	}
 
 	public static InputStream openDisplayPhoto(Activity currentActivity, long contactId) {
+		if (HTKUtils.getCurrentAPIVersion() < android.os.Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
+			return null;
+		}
 		Uri contactUri = ContentUris.withAppendedId(Contacts.CONTENT_URI, contactId);
 		Uri displayPhotoUri = Uri.withAppendedPath(contactUri, Contacts.Photo.DISPLAY_PHOTO);
 		try {

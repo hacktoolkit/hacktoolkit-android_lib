@@ -13,7 +13,12 @@ import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 
 public class HTKUtils {
-	
+
+	public static int getCurrentAPIVersion() {
+		int currentAPIVersion = android.os.Build.VERSION.SDK_INT;
+		return currentAPIVersion;
+	}
+
 	public static Intent getActivityIntent(String packageName, String className) {
 		Intent intent = new Intent();
 		intent.setClassName(packageName, className);
