@@ -36,7 +36,6 @@ public class ContactsUtils {
 
 			@Override
 			protected void onPostExecute(ArrayList<HTKContact> resultContacts) {
-//				contacts.addAll(resultContacts);
 				adapter.loadContacts(resultContacts);
 			}
 		}.execute();

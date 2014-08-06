@@ -20,7 +20,7 @@ public class HTKContactsAdapter extends ArrayAdapter<HTKContact> {
 
 	public void setItemSelected(int position, boolean isSelected) {
 		HTKContact contact = this.getItem(position);
-		contact.setMetaData("selected", isSelected);
+		contact.setSelected(isSelected);
 	}
 
 	public ArrayList<HTKContact> getSelectedContacts() {

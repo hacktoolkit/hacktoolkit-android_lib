@@ -89,6 +89,10 @@ public class HTKContact implements Parcelable {
 		return value;
 	}
 
+	public void setSelected(boolean selected) {
+		setMetaData("selected", selected);
+	}
+
 	@Override
 	public int describeContents() {
 		// TODO Auto-generated method stub
