@@ -1,11 +1,18 @@
 package com.hacktoolkit.android.models;
 
+import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Iterator;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import com.hacktoolkit.android.utils.BitmapUtils;
+import com.hacktoolkit.android.utils.ContactsUtils;
+
+import android.app.Activity;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Parcel;
 import android.os.Parcelable;
 
@@ -87,6 +94,26 @@ public class HTKContact implements Parcelable {
 	public Object getMetaData(String key) {
 		Object value = data.get(getMetaKey(key));
 		return value;
+	}
+
+	public long getId() {
+		long id = (Integer) this.getData("id");
+		return id;
+	}
+
+	public Bitmap getAvatar(Activity activity) {
+		Bitmap avatar = getAvatar(activity, true);
+		return avatar;
+	}
+
+	public Bitmap getAvatar(Activity activity, boolean rounded) {
+		InputStream photoInputStream = ContactsUtils.openPhoto(activity, this.getId());
+		Bitmap avatar = BitmapFactory.decodeStream(photoInputStream);
+		if (rounded) {
+			Bitmap roundedAvatar = BitmapUtils.getRoundedShape(avatar);
+			avatar = roundedAvatar;
+		}
+		return avatar;
 	}
 
 	public void setSelected(boolean selected) {

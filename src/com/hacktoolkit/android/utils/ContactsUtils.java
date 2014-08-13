@@ -14,8 +14,11 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.provider.ContactsContract;
 import android.provider.ContactsContract.Contacts;
+import android.support.v4.app.FragmentActivity;
+import android.support.v4.app.FragmentManager;
 
 import com.hacktoolkit.android.adapters.HTKContactsAdapter;
+import com.hacktoolkit.android.fragments.ContactsFragment;
 import com.hacktoolkit.android.models.HTKContact;
 
 public class ContactsUtils {
@@ -30,13 +33,33 @@ public class ContactsUtils {
 
 			@Override
 			protected ArrayList<HTKContact> doInBackground(Void... v) {
+				if (currentActivity instanceof FragmentActivity) {
+					FragmentManager fragmentManager = ((FragmentActivity) currentActivity).getSupportFragmentManager();
+					ContactsFragment contactsFragment = (ContactsFragment) fragmentManager.findFragmentByTag("contacts");
+					if (contactsFragment != null) {
+						contactsFragment.startRetrieving();
+					}
+				}
 				ArrayList<HTKContact> resultContacts = ContactsUtils.getContactsWithPhone(currentActivity);
 				return resultContacts;
 			}
 
 			@Override
 			protected void onPostExecute(ArrayList<HTKContact> resultContacts) {
-				adapter.loadContacts(resultContacts);
+				if (currentActivity != null) {
+					if (currentActivity instanceof FragmentActivity) {
+						FragmentManager fragmentManager = ((FragmentActivity) currentActivity).getSupportFragmentManager();
+						ContactsFragment contactsFragment = (ContactsFragment) fragmentManager.findFragmentByTag("contacts");
+						if (contactsFragment != null) {
+							HTKContactsAdapter adapter = contactsFragment.getAdapter();
+							if (adapter != null) {
+								adapter.loadContacts(resultContacts);
+							}
+						}
+					} else {
+						adapter.loadContacts(resultContacts);
+					}
+				}
 			}
 		};
 		getContactsAsyncTask.execute();
@@ -157,7 +180,6 @@ public class ContactsUtils {
 		}
 		return phoneType;
 	}
-
 
 	public static InputStream openPhoto(Activity currentActivity, long contactId) {
 		if (HTKUtils.getCurrentAPIVersion() < android.os.Build.VERSION_CODES.HONEYCOMB) {
